@@ -1,0 +1,56 @@
+RoKost - Economy control
+========================
+Dvs en halvautomatisk kassabok.
+
+Princip
+-------
+- Kontoutdrag laddas ner från internetbanken, i Nordeas fall en csv per konto.
+  Finns ingen information i filen om vilket konto det gäller.
+
+- En daemon bevakar en utpekad katalog / en komandoradsklient körs med växel vilket 
+  konto som berörs.
+
+  - Alla transaktioner i filen behandlas:
+    - Detaljfältet analyseras och kopplas mot en befintlig betalningsmottagare, 
+      alternativt skapas en ny.
+    - Om befintlig mottagare, leta upp vilket konto som då brukar belastas.
+    - Spara transaktionen, följande fält:
+      Tabell: 'transaction'
+      date        - från fil
+      description - från fil
+      tag         - från fil
+      amount      - från fil
+      debit       - vart pengarna från transaktionen hamnade, positiva värden (bokföring...)
+      (konto)       (dvs om transaktionen är lön så är det i detta fält som lönekontet sätts.)
+                    SÄTTS automatiskt om mölj, annars via webinterface. Måste alltid bekräftas även om auto.
+      kredit      - vart pengarna från transaktionen kom ifrån, negativa värden
+      (konto)       (dvs om transaktionen är en betalning så är detta fält löne-/huskontot)
+                    SÄTTS automatiskt om mölj, annars via webinterface. Måste alltid bekräftas även om auto.
+      "target"    - Betalningsmottagare, arbetsgivare, kontokontakter... 
+                    Beräknad utifrån informationen i fältet description. Anväds för att automatiskt tilldela
+                    konto till debet/kredit
+      comment     - Fritextkommentar från webinterface
+
+    - Tabell för konton 
+      Tabell: 'account'
+      name
+      number
+      transactions
+
+    - Tabell för "target" (hitta bättre namn)
+      Tabell: 'endpoint'
+      name      - från description om möjigt
+      raw       - strängen från descriptionfältet, ev tvättad
+      account   - sätts via webinterface, anväds som defaultkonto för transaktioner som kopplats till detta mål.
+
+
+    - Historik-tabell
+      Tabell: 'history'
+      date
+      user
+      what          - text, beskrivning 'lograd'
+      transaktion   - påverkad transaktion    \
+      account       - påverkat konto          | xor
+      "target"      - påverkat mål            /
+
+
